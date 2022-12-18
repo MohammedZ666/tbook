@@ -3,24 +3,11 @@ const bcrypt = require("bcrypt");
 
 const create = async (req, res) => {
   try {
-    let { email, password } = req.body;
-
-    if (!(email || password))
-      return res.status(400).json({
-        msg: "User email or password field is empty",
-      });
-
-    password = bcrypt.hashSync(password, bcrypt.genSaltSync());
-    let user = await User.create(
-      {
-        email,
-        password,
-      },
-      {
-        upsert: true,
-        new: true,
-      }
-    ).select("-password");
+    let data = req.body;
+    data.password = bcrypt.hashSync(data.password, bcrypt.genSaltSync());
+    console.log(data);
+    let user = await User.create(data);
+    delete user.password;
     return res.status(200).json({
       msg: "Success!",
       user,
@@ -31,6 +18,27 @@ const create = async (req, res) => {
       msg: `User creation failed ${err}`,
     });
   }
+};
+const login = async (req, res) => {
+  console.log("login");
+  const { email, password } = req.body;
+  const user = await User.findOne({ email: email });
+  console.log(user);
+  if (user == null) {
+    return res.status(400).json({
+      msg: `User does not exists`,
+    });
+  }
+  if (!bcrypt.compareSync(password, user.password)) {
+    console.log("password don't match");
+    return res.status(400).json({
+      msg: `User password does not match`,
+    });
+  }
+  res.status(200).json({
+    user,
+    msg: "Success!",
+  });
 };
 const get = async (req, res) => {
   try {
@@ -45,7 +53,9 @@ const get = async (req, res) => {
     });
   }
 };
+
 module.exports = {
+  login,
   create,
   get,
 };

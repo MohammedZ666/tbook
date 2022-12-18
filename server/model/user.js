@@ -7,6 +7,7 @@ const User = model(
       email: {
         type: String,
         required: true,
+        unique: true,
       },
       password: {
         type: String,

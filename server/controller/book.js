@@ -3,15 +3,6 @@ const User = require("../model/user");
 const bcrypt = require("bcrypt");
 const publish = async (req, res) => {
   try {
-    const editor = await User.findOne({
-      email: req.body.email,
-    });
-
-    if (!editor || !bcrypt.compareSync(req.body.password, editor.password))
-      return res.status(400).json({
-        msg: "User not authorized, contact admin",
-      });
-
     let keys = Object.keys(req.body);
     keys.forEach((item) => {
       if (!req.body[item])
@@ -19,9 +10,10 @@ const publish = async (req, res) => {
           msg: `${item} is empty`,
         });
     });
-    const book = await Book.create(req.body);
+    const book = await Book.create(req.body, { new: true });
     return res.status(200).json({
       msg: "Success!",
+      book,
     });
   } catch (err) {
     res.status(400).json({
